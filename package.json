@@ -1,0 +1,25 @@
+{
+  "name": "mind_gallery",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/66070295pochara/MIND_GALLERY.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/66070295pochara/MIND_GALLERY/issues"
+  },
+  "homepage": "https://github.com/66070295pochara/MIND_GALLERY#readme",
+  "description": "",
+  "dependencies": {
+    "ejs": "^3.1.10",
+    "express": "^5.1.0",
+    "node-modules": "^0.0.1"
+  }
+}
