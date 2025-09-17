@@ -18,8 +18,15 @@
   "homepage": "https://github.com/66070295pochara/MIND_GALLERY#readme",
   "description": "",
   "dependencies": {
+    "aws-sdk": "^2.1692.0",
+    "body-parser": "^2.2.0",
+    "crypto": "^1.0.1",
+    "dotenv": "^17.2.2",
     "ejs": "^3.1.10",
     "express": "^5.1.0",
-    "node-modules": "^0.0.1"
+    "express-session": "^1.18.1",
+    "jsonwebtoken": "^9.0.2",
+    "node-modules": "^0.0.1",
+    "openid-client": "^5.7.0"
   }
 }

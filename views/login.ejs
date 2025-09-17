@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="th" class="h-full">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login • Cognito</title>
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-slate-900 text-white flex items-center justify-center p-6">
+  <div class="w-full max-w-md">
+    <div class="bg-slate-800 rounded-2xl shadow-xl p-6">
+      <h1 class="text-2xl font-semibold mb-4">เข้าสู่ระบบ</h1>
+      <p class="text-sm text-slate-300 mb-6">
+        กรอก Username และ Password เพื่อเข้าสู่ระบบ
+      </p>
+
+      <form id="loginForm" class="space-y-4">
+        <div>
+          <label for="username" class="block text-sm mb-1">Username</label>
+          <input id="username" name="username" type="text" required
+                 class="w-full rounded-lg bg-slate-700 border border-slate-600 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500" />
+        </div>
+
+        <div>
+          <label for="password" class="block text-sm mb-1">Password</label>
+          <input id="password" name="password" type="password" required
+                 class="w-full rounded-lg bg-slate-700 border border-slate-600 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500" />
+        </div>
+
+        <button id="btnSubmit" type="submit"
+                class="w-full rounded-lg bg-indigo-600 hover:bg-indigo-500 transition px-4 py-2 font-medium">
+          เข้าสู่ระบบ
+        </button>
+      </form>
+
+      <!-- แสดงผลลัพธ์ -->
+      <div id="status" class="mt-4 hidden">
+        <div id="statusText" class="text-sm"></div>
+        <pre id="statusData" class="mt-2 text-xs bg-slate-900 p-3 rounded-lg overflow-auto"></pre>
+      </div>
+    </div>
+
+    <p class="text-center text-xs text-slate-400 mt-4">
+      ยังไม่มีบัญชี? <a href="/signup" class="underline">สมัครสมาชิก</a>
+    </p>
+  </div>
+
+  <script>
+    const form = document.getElementById('loginForm');
+    const btn = document.getElementById('btnSubmit');
+    const statusBox = document.getElementById('status');
+    const statusText = document.getElementById('statusText');
+    const statusData = document.getElementById('statusData');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+
+      btn.disabled = true;
+      btn.textContent = 'กำลังเข้าสู่ระบบ...';
+
+      statusBox.classList.remove('hidden');
+      statusText.className = 'text-sm text-slate-300';
+      statusText.textContent = 'กำลังส่งข้อมูล...';
+      statusData.textContent = '';
+
+      try {
+        const res = await fetch('/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+
+        const json = await res.json();
+
+        if (res.ok) {
+          statusText.className = 'text-sm text-emerald-400';
+          statusText.textContent = 'เข้าสู่ระบบสำเร็จ!';
+          statusData.textContent = JSON.stringify(json, null, 2);
+
+          // 👉 เก็บ token ไว้ใน localStorage ถ้าต้องการ
+          if (json.data?.AuthenticationResult?.AccessToken) {
+            localStorage.setItem('accessToken', json.data.AuthenticationResult.AccessToken);
+          }
+        } else {
+          statusText.className = 'text-sm text-red-400';
+          statusText.textContent = json.error || 'เข้าสู่ระบบไม่สำเร็จ';
+          statusData.textContent = JSON.stringify(json, null, 2);
+        }
+      } catch (err) {
+        statusText.className = 'text-sm text-red-400';
+        statusText.textContent = 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้';
+        statusData.textContent = String(err);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'เข้าสู่ระบบ';
+      }
+    });
+  </script>
+</body>
+</html>
