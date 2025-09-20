@@ -18,8 +18,16 @@
   "homepage": "https://github.com/66070295pochara/MIND_GALLERY#readme",
   "description": "",
   "dependencies": {
+    "aws-jwt-verify": "^5.1.0",
+    "axios": "^1.12.2",
+    "dotenv": "^17.2.2",
     "ejs": "^3.1.10",
     "express": "^5.1.0",
-    "node-modules": "^0.0.1"
+    "nodemon": "^3.1.10",
+    "pg": "^8.16.3",
+    "querystring": "^0.2.1",
+    "aws-sdk": "^2.1692.0",
+    "cookie-parser": "^1.4.7",
+    "crypto": "^1.0.1"
   }
 }
