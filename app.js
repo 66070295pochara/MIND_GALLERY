@@ -1,107 +1,19 @@
-const express = require('express');
-const session = require('express-session');
-const bodyParser = require('body-parser');
-const AWS = require('aws-sdk');
-const jwt = require('jsonwebtoken');
-const { Issuer, generators } = require('openid-client');
-const crypto = require('crypto');
+require("dotenv").config();
+const express = require("express");
+const path = require("path");
 const app = express();
+const cookieParser = require("cookie-parser");
+const AWS = require("aws-sdk");
+const { authenticateCognitoJWT, requireAuth, requireRole } = require('./middlewares/authenticate');
+const crypto = require("crypto");
+
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
+
 app.use(express.json());
-// let client;
-// // Initialize OpenID Client
-// async function initializeClient() {
-//     const issuer = await Issuer.discover('https://cognito-idp.us-east-1.amazonaws.com/us-east-1_2gbAkvO36');
-//     client = new issuer.Client({
-//         client_id: 'pe9oa47b42at3jqvdk088u2io',
-//         client_secret: '<client secret>',
-//         redirect_uris: ['https://d84l1y8p4kdic.cloudfront.net'],
-//         response_types: ['code']
-//     });
-// };
-// initializeClient().catch(console.error);
-// app.use(session({
-//     secret: 'some secret',
-//     resave: false,
-//     saveUninitialized: false
-// }));
-
-// const checkAuth = (req, res, next) => {
-//     if (!req.session.userInfo) {
-//         req.isAuthenticated = false;
-//     } else {
-//         req.isAuthenticated = true;
-//     }
-//     next();
-// };
-// app.get('/', checkAuth, (req, res) => {
-//     res.render('home', {
-//         isAuthenticated: req.isAuthenticated,
-//         userInfo: req.session.userInfo
-//     });
-// });
-// app.get('/login', (req, res) => {
-//     const nonce = generators.nonce();
-//     const state = generators.state();
-
-//     req.session.nonce = nonce;
-//     req.session.state = state;
-
-//     const authUrl = client.authorizationUrl({
-//         scope: 'phone openid email',
-//         state: state,
-//         nonce: nonce,
-//     });
-
-//     res.redirect(authUrl);
-// });
-// // Helper function to get the path from the URL. Example: "http://localhost/hello" returns "/hello"
-// function getPathFromURL(urlString) {
-//     try {
-//         const url = new URL(urlString);
-//         return url.pathname;
-//     } catch (error) {
-//         console.error('Invalid URL:', error);
-//         return null;
-//     }
-// }
-
-// app.get(getPathFromURL('https://d84l1y8p4kdic.cloudfront.net'), async (req, res) => {
-//     try {
-//         const params = client.callbackParams(req);
-//         const tokenSet = await client.callback(
-//             'https://d84l1y8p4kdic.cloudfront.net',
-//             params,
-//             {
-//                 nonce: req.session.nonce,
-//                 state: req.session.state
-//             }
-//         );
-
-//         const userInfo = await client.userinfo(tokenSet.access_token);
-//         req.session.userInfo = userInfo;
-
-//         res.redirect('/');
-//     } catch (err) {
-//         console.error('Callback error:', err);
-//         res.redirect('/');
-//     }
-// });
-// // Logout route
-// app.get('/logout', (req, res) => {
-//     req.session.destroy();
-//     const logoutUrl = `https://<user pool domain>/logout?client_id=pe9oa47b42at3jqvdk088u2io&logout_uri=<logout uri>`;
-//     res.redirect(logoutUrl);
-// });
-
-require('dotenv').config();
-
-function secretHash(username) {
-  return crypto
-    .createHmac('sha256', process.env.COGNITO_CLIENT_SECRET)  // ใช้ secret
-    .update(username + process.env.COGNITO_CLIENT_ID)         // concat username+clientId
-    .digest('base64');                                        // แปลงเป็น Base64
-}
-
+app.use(cookieParser());
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static(path.join(__dirname, "public")));
 
 AWS.config.update({
   region: process.env.AWS_REGION,
@@ -111,99 +23,165 @@ AWS.config.update({
     process.env.AWS_SESSION_TOKEN ,// ต้องมี
   ),
 });
-
-
 const cognito = new AWS.CognitoIdentityServiceProvider();
 
-const authenticateJWT = (req, res, next) => {
-    const token = req.headers.authorization;
-    if (token) {
-        jwt.verify(token, 'mam01', (err, user) => {
-            if (err) {
-                return res.sendStatus(403);
-            }
-            req.user = user;
-            next();
-        });
-    }else {
-            res.sendStatus(401);
-        }
-    };
+function secretHash(username) {
+  return crypto
+    .createHmac('sha256', process.env.COGNITO_CLIENT_SECRET)
+    .update(username + process.env.COGNITO_CLIENT_ID)
+    .digest('base64');      
+}
+
+app.get("/", (req,res) =>{
+  res.redirect, { username: username }}
+);
+
+// app.get("/owngallery", requireAuth, (req, res) => {
+//   const claims = req.user;
+//   const username =
+//     req.query.username || claims["cognito:username"] || claims.email;
+
+//   // 👇 ข้อมูลโพสต์ในที่นี้ตัวอย่าง mock ขึ้นมา
+//   // ในงานจริงให้ดึงจาก DB หรือ S3 ตามที่คุณเก็บ
+//   const posts = [
+//     { id: 1, imageUrl: "https://placehold.co/300x300", caption: "First post" },
+//     { id: 2, imageUrl: "https://placehold.co/300x300", caption: "Another pic" },
+//     { id: 3, imageUrl: "https://placehold.co/300x300" },
+//   ];
+
+//   res.render("owngallery", {
+//     title: "Mind Gallery - My Gallery",
+//     username,
+//     posts,
+//   });
+// });
+
+
+
 app.get('/signup', (req, res) => {
-    res.render('signup');
+  res.render('signup', { title: 'Sign Up' });
 });
-app.post('/signup', async (req, res) => {
-  const { username, password, email } = req.body;
+app.post('/signup', (req, res) => {
+  const { username, password, email, name } = req.body;
 
   const params = {
-    ClientId: process.env.COGNITO_CLIENT_ID, // อ่านจาก .env
+    ClientId: process.env.COGNITO_CLIENT_ID,
     Username: username,
     Password: password,
     UserAttributes: [
       { Name: 'email', Value: email },
-       { Name: 'name', Value: username }
-    ],SECRET_HASH: secretHash(username),
+      { Name: 'name', Value: name }
+    ],
+    SecretHash: secretHash(username)
+  };
+  cognito.signUp(params, (err, data) => {
+    if (err) {
+      console.error('Error during sign up:', err);
+      return res.status(400).send('Error during sign up: ' + err.message);
+    }
+    console.log('Sign up successful:', data);
+    res.send('Sign up successful! Please check your email for verification.');
+  });
+});
+app.get('/confirm', (req, res) => {
+  res.render('confirm', { title: 'Confirm Sign Up' });
+});
+app.post('/confirm', (req, res) => {
+  const { username, code } = req.body;
+  const params = {
+    ClientId: process.env.COGNITO_CLIENT_ID,
+    Username: username, 
+    ConfirmationCode: code,
+    SecretHash: secretHash(username)
+  };
+  cognito.confirmSignUp(params, (err, data) => {
+    if (err) {
+      console.error('Error during confirmation:', err);
+      return res.status(400).send('Error during confirmation: ' + err.message);
+    }
+    console.log('Confirmation successful:', data);
+    res.send('Confirmation successful! You can now log in.');
+  });
+});
+app.get('/login', (req, res) => {
+  res.render('login', { title: 'Log In' });
+});
+app.post('/login', (req, res) => {
+  const { username, password } = req.body;
+
+  const params = {
+    AuthFlow: 'USER_PASSWORD_AUTH',
+    ClientId: process.env.COGNITO_CLIENT_ID,
+    AuthParameters: {
+      USERNAME: username,
+      PASSWORD: password,
+      SECRET_HASH: secretHash(username) // ถ้า app client มี client secret
+    }
   };
 
+  cognito.initiateAuth(params, (err, data) => {
+    if (err) {
+      console.error('Error during login:', err);
+      return res.status(400).send('Error during login: ' + err.message);
+    }
+
+    const { AccessToken, IdToken, ExpiresIn } = data.AuthenticationResult;
+
+    // ✅ ตั้งคุกกี้ให้ requireAuth อ่านได้
+    res.cookie('access_token', AccessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production', // dev ใช้ false ได้
+      sameSite: 'lax',                               // เหมาะกับ localhost
+      maxAge: ExpiresIn * 1000,
+      path: '/',
+    });
+
+    // (ถ้าต้องใช้ claims จาก id_token บน client/SSR จะเก็บเพิ่มได้)
+    // res.cookie('id_token', IdToken, { ...options เดียวกัน... });
+
+  return res.redirect('/profile?username=' + encodeURIComponent(username));
+  });
+});
+
+app.get('/logout', (req, res) => {
+  res.clearCookie('access_token');
+  res.redirect('/login');
+});
+
+const axios = require('axios');
+const qs = require('querystring');
+
+app.get('/auth/callback', async (req, res) => {
+  const code = req.query.code;
   try {
-    const data = await cognito.signUp(params).promise();
-    res.json({ message: 'User signed up successfully', data });
-  } catch (err) {
-    console.error('Signup error:', err);
-    res.status(400).json({ error: err.message });
+    const tokenRes = await axios.post(
+      `https://${process.env.COGNITO_DOMAIN}/oauth2/token`,
+      qs.stringify({
+        grant_type: 'authorization_code',
+        client_id: process.env.COGNITO_CLIENT_ID,
+        code,
+        redirect_uri: 'http://localhost:3000/auth/callback'
+      }),
+      { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+    );
+
+    const { access_token, id_token, expires_in } = tokenRes.data;
+
+    res.cookie('access_token', access_token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: expires_in * 1000,
+      path: '/',
+    });
+
+    return res.redirect('/profile');
+  } catch (e) {
+    console.error(e.response?.data || e);
+    return res.status(400).send('Callback exchange failed');
   }
 });
 
-app.post('/confirm', async (req, res) => {
-    const { username, confirmationCode } = req.body;
-
-    const params = {
-        ClientId: process.env.COGNITO_CLIENT_ID,
-        Username: username,
-        ConfirmationCode: confirmationCode,
-        SECRET_HASH: secretHash(username),
-    };
-    try {
-        const data = await cognito.confirmSignUp(params).promise();
-        res.json({ message: 'User confirmed successfully', data });
-    } catch (err) {
-        res.status(400).json({ error: err.message });
-    }
-});
-
-app.get('/login', (req, res) => {
-  res.render('login');
-});
-
-app.post('/login', async (req, res) => {
-    const { username, password } = req.body;
-
-    const params = {
-        AuthFlow: 'USER_PASSWORD_AUTH',
-        ClientId: process.env.COGNITO_CLIENT_ID,
-        AuthParameters: {
-            USERNAME: username,
-            PASSWORD: password,
-            SECRET_HASH: secretHash(username),
-        }
-    };
-    try {
-       const data = await cognito.initiateAuth(params).promise();
-        
-        res.json({
-        message: 'User logged in successfully',
-        tokens: data.AuthenticationResult //AccessToken, IdToken, RefreshToken
-    });
-    } catch (err) {
-        res.status(400).json({ error: err.message });
-    }
-});
-
-app.get('/homepage', authenticateJWT, (req, res) => {
-    res.json({ message: `Welcome to the homepage, ${req.user.username}!` });
-});
 
 
-
-app.set('view engine', 'ejs');
-app.listen(3000, () => console.log('Server running on http://localhost:3000'));
+app.listen(3000, ()=>console.log("http://localhost:3000/profile"));

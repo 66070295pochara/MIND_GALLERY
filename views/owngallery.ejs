@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title><%= username %> • Gallery</title>
+</head>
+<body>
+  <!-- Header -->
+  <header>
+    <nav>
+      <a href="/menu">☰</a>
+    </nav>
+    <h1><%= username %></h1>
+    <div>
+      <!-- ใส่ลิงก์ไปหน้าอัปโหลดตามที่คุณใช้ในโปรเจกต์ -->
+      <a href="/upload">Add pic +</a>
+    </div>
+    <hr>
+  </header>
+
+  <!-- Gallery -->
+  <% if (Array.isArray(posts) && posts.length > 0) { %>
+    <section>
+      <!-- ใช้ table เพื่อให้เรียงเป็นตารางได้โดยไม่ต้องมี CSS -->
+      <table border="1" cellspacing="0" cellpadding="4">
+        <tbody>
+          <% for (let i = 0; i < posts.length; i += 3) { %>
+            <tr>
+              <% [0,1,2].forEach(function(offset){ 
+                   const p = posts[i + offset]; %>
+                <td style="width: 220px; height: 220px; text-align:center; vertical-align:middle;">
+                  <% if (p) { %>
+                    <a href="/post/<%= p.id || i+offset %>">
+                      <img
+                        src="<%= p.imageUrl %>"
+                        alt="<%= p.caption || ('post-' + (p.id || (i+offset))) %>"
+                        style="max-width: 100%; max-height: 200px;"
+                      >
+                    </a>
+                    <% if (p.caption) { %>
+                      <div><%= p.caption %></div>
+                    <% } %>
+                  <% } else { %>
+                    <!-- ช่องว่างถ้าโพสต์ไม่พอครบ 3 คอลัมน์ -->
+                    &nbsp;
+                  <% } %>
+                </td>
+              <% }); %>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </section>
+  <% } else { %>
+    <p>No posts yet.</p>
+  <% } %>
+
+</body>
+</html>

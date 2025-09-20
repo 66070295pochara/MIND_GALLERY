@@ -2,22 +2,22 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Login</title>
+  <title>Confirm Sign Up</title>
 </head>
 <body>
-  <h1>Login</h1>
-  <form action="/login" method="POST">
+  <h1>Confirm Your Account</h1>
+  <form action="/confirm" method="POST">
     <div>
       <label for="username">Username:</label><br>
       <input type="text" id="username" name="username" required>
     </div>
     <br>
     <div>
-      <label for="password">Password:</label><br>
-      <input type="password" id="password" name="password" required>
+      <label for="code">Confirmation Code:</label><br>
+      <input type="text" id="code" name="code" required>
     </div>
     <br>
-    <button type="submit">Login</button>
+    <button type="submit">Confirm</button>
   </form>
 </body>
 </html>
