@@ -1,0 +1,19 @@
+# MIND_GALLERY
+config = ไม่ต้องแตะต้องถ้าไม่ได้จะใช้ aws service อื่นๆ ถ้าจะเพิ่ม npm install เอา
+controllers = logic ของ route ต่างๆ
+    - upload.controller.js = logic ของการอัพโหลดไฟล์
+    - auth.controller.js = logic ของการ authenticate
+    - gallery.controller.js = logic ของการแสดง gallery
+middlewares = 
+    - authenticate.js = จะใช้{ authenticateCognitoJWT, requireAuth, requireRole } เลือกใส่ไว้ใน route ที่ต้องการ requireAuth = ต้อง login ก่อนถึงจะเข้าถึงได้
+    ###  requireAuth ควรไว้หน้า controller function เสมอ เพราะถ้าไม่ผ่านจะได้ไม่ต้องไป execute logic ใน controller ex: ('/presign', requireAuth, uploadController.getPresignedPutUrl);
+routes = 
+    - upload.routes.js = route ที่เกี่ยวกับการอัพโหลดไฟล์
+    - auth.routes.js = route ที่เกี่ยวกับการ authenticate
+    - gallery.routes.js = route ที่เกี่ยวกับการแสดง gallery[ owngallery, publicgallery(feed) ]
+    # ListObjectsV2Command = ดึง list object ใน s3
+utils = 
+    - secretHash.js = ฟังก์ชันช่วยในการ generate secret hash สำหรับ authenticate cognito
+server.js = จุดเริ่มต้นของโปรเจค
+
+
