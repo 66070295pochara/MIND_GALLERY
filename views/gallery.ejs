@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Gallery</title>
+  <style>
+    body { font-family: sans-serif; }
+    .gallery {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .gallery img {
+      max-width: 200px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      padding: 4px;
+      background: #fafafa;
+    }
+  </style>
+</head>
+<body>
+  <h1>📸 Uploaded Gallery</h1>
+  <div class="gallery">
+    <% files.forEach(file => { %>
+      <div>
+        <img src="/uploads/<%= file %>" alt="<%= file %>">
+        <p><%= file %></p>
+      </div>
+    <% }) %>
+  </div>
+</body>
+</html>

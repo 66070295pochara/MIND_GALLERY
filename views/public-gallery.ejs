@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <!-- views/public-gallery.ejs -->
+<h1>📸 Public Gallery</h1>
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px">
+  <% images.forEach(n => { %>
+    <img src="/public-uploads/<%= n %>" alt="<%= n %>" style="width:100%;height:160px;object-fit:cover;border-radius:6px">
+  <% }) %>
+</div>
+</body>
+</html>
