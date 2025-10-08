@@ -5,9 +5,17 @@
   <title>Test Upload</title>
 </head>
 <body>
-  <h1>ทดสอบอัปโหลดไฟล์</h1>
-  <form action="/api/gallery/upload" method="POST" enctype="multipart/form-data">
+<form action="/api/gallery/upload" method="POST" enctype="multipart/form-data">
   <input type="file" name="image" accept="image/*" required>
+
+  <label style="display:block;margin:8px 0;">
+    <input type="checkbox" name="isPublic" value="true">
+    Make this image Public
+  </label>
+
+  <label style="display:block;margin:8px 0;">Description</label>
+  <textarea name="description" rows="3" placeholder="Add a caption..."></textarea>
+
   <button type="submit">Upload</button>
 </form>
 

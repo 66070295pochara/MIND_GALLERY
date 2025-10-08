@@ -8,6 +8,8 @@ const ImageSchema = new mongoose.Schema({
   mime: String,
   size: Number,
   path: String,
+  isPublic: { type: Boolean, default: false },
+  description: { type: String, default: '' },
 }, { timestamps: true });
 
 export default mongoose.model('Image', ImageSchema);

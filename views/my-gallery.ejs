@@ -11,18 +11,44 @@
   </style>
 </head>
 <body>
-  <h1>📸 My Gallery</h1>
 
-  <div class="grid">
-    <% images.forEach(img => { %>
-      <div class="card">
-        <img src="/api/gallery/file/<%= img._id %>" alt="<%= img.originalName %>" />
-        <div class="meta"><%= img.originalName %></div>
-      </div>
-    <% }) %>
-  </div>
+  <h2>My Gallery</h2>
+<div class="gallery">
+  <% images.forEach(img => { %>
+    <div class="card">
+      <img src="<%= img.url %>" alt="<%= img.originalName %>">
+      
+      <!-- ชื่อไฟล์ -->
+      <p><strong><%= img.originalName %></strong></p>
 
-  <p><a href="/upload">+ อัปโหลดรูปใหม่</a></p>
-  <form action="/api/users/logout" method="POST"><button>Logout</button></form>
+      <!-- ✅ แสดง Description ถ้ามี -->
+      <% if (img.description && img.description.trim() !== '') { %>
+        <p><em><%= img.description %></em></p>
+      <% } else { %>
+        <p style="color: #999;">No description yet.</p>
+      <% } %>
+
+      <!-- สถานะ -->
+      <p>Status: <%= img.isPublic ? '🌐 Public' : '🔒 Private' %></p>
+
+      <button onclick="toggle('<%= img._id %>')">
+        Change to <%= img.isPublic ? 'Private' : 'Public' %>
+      </button>
+    </div>
+  <% }) %>
+</div>
+
+
+
+<script>
+async function toggle(id) {
+  const res = await fetch(`/api/gallery/toggle/${id}`, {
+    method: 'PUT'
+  });
+  const data = await res.json();
+  if (data.ok) location.reload();
+  else alert(data.message);
+}
+</script>
 </body>
 </html>

@@ -9,12 +9,11 @@ const router = express.Router();
 router.post('/upload',authMiddleware(),uploadStorage.upload.single('image'),galleryController.uploadImage);
 
 
-router.get('/', authMiddleware(), galleryController.getMyGallery);
+router.get('/mygallery', authMiddleware(), galleryController.getMyGallery);
+router.get('/public', authMiddleware(), galleryController.getPublicGallery);
 
+// router.get('/file/:id', authMiddleware(), galleryController.getImageFile);
 
-router.get('/file/:id', authMiddleware(), galleryController.getImageFile);
-
-
-router.delete('/:id', authMiddleware(), galleryController.deleteImage);
+router.put('/toggle/:id', authMiddleware(), galleryController.togglePublic);
 
 export default router;
