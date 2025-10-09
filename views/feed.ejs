@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Feed</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- ถ้ามี Tailwind build ไว้ให้ผ่าน /style.css -->
+    <link href="/style.css" rel="stylesheet" />
+    <script src="https://unpkg.com/feather-icons"></script>
+    <style>
+      /* เผื่อไม่มี Tailwind บางส่วน – ทำให้รูปค่อย ๆ โผล่ */
+      .fade-in { opacity: 0; transition: opacity .3s ease; }
+      .fade-in.loaded { opacity: 1; }
+      /* ป้องกัน layout shift ระหว่างโหลดรูป */
+      .ratio-square { position: relative; width: 100%; padding-top: 100%; }
+      .ratio-square > img, .ratio-square > video, .ratio-square > canvas {
+        position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+      }
+      /* Masonry แบบง่ายด้วย CSS columns (ถ้าอยากได้แนว Pinterest) */
+      @media (min-width: 768px) {
+        .masonry { column-count: 3; column-gap: 1rem; }
+        .masonry-item { break-inside: avoid; margin-bottom: 1rem; }
+      }
+      @media (min-width: 1024px) {
+        .masonry { column-count: 4; }
+      }
+    </style>
+  </head>
+
+  <body class="bg-[#0f1533] text-white font-sans min-h-screen">
+    <div class="flex mx-auto min-h-screen max-w-6xl">
+      <!-- ถ้ามี sidebar เป็น partial -->
+      <% if (typeof include === 'function') { %>
+        <%- include('components/sidebar') %>
+      <% } %>
+
+      <main class="flex-1 border-x border-gray-700">
+        <!-- Header -->
+        <div class="flex items-center justify-between border-b border-gray-700 px-4 py-3">
+          <div class="flex items-center gap-3">
+            <a href="/" class="text-gray-400 hover:text-white">
+              <i data-feather="arrow-left" class="w-5 h-5"></i>
+            </a>
+            <span class="text-lg font-semibold">Feed</span>
+          </div>
+          <button id="refreshBtn" class="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-sm">
+            <i data-feather="refresh-cw" class="inline w-4 h-4 -mt-0.5"></i>
+            <span class="align-middle">Refresh</span>
+          </button>
+        </div>
+
+        <!-- เมื่อไม่มีโพสต์ -->
+        <% if (!posts || posts.length === 0) { %>
+          <section class="p-6 text-center text-gray-300">
+            <div class="mx-auto max-w-md">
+              <i data-feather="image" class="w-10 h-10 mx-auto mb-3 text-gray-500"></i>
+              <h2 class="text-xl font-semibold mb-2">ยังไม่มีโพสต์ให้แสดง</h2>
+              <p class="text-sm text-gray-400">อัปโหลดรูปภาพของคุณเพื่อเริ่มต้นฟีด</p>
+            </div>
+          </section>
+        <% } else { %>
+
+        <!-- แบบ GRID ปกติ -->
+        <section class="p-4 hidden md:block">
+          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+            <% posts.forEach(function(post) { %>
+              <% if (!post || !post.imageUrl) { return; } %>
+              <article class="group rounded-xl overflow-hidden bg-white/5 ring-1 ring-white/10 hover:ring-white/20 transition">
+                <div class="ratio-square">
+                  <img
+                    src="<%= post.imageUrl %>"
+                    alt="<%= post.caption || 'post image' %>"
+                    loading="lazy"
+                    decoding="async"
+                    class="fade-in"
+                    onload="this.classList.add('loaded')"
+                    onerror="this.onerror=null; this.src='https://placehold.co/600x600?text=Image+Unavailable';"
+                  />
+                </div>
+
+                <div class="p-3 flex items-center justify-between">
+                  <div class="truncate text-sm text-gray-300">
+                    <%= post.caption ? post.caption : '—' %>
+                  </div>
+                  <button
+                    class="px-2 py-1 rounded-md text-xs bg-white/10 hover:bg-white/20"
+                    onclick="openLightbox('<%= post.imageUrl %>', `<%= (post.caption || '').replace(/`/g,'\\`') %>`)"
+                    aria-label="ดูภาพขนาดใหญ่"
+                  >
+                    <i data-feather="maximize-2" class="w-3.5 h-3.5"></i>
+                  </button>
+                </div>
+              </article>
+            <% }) %>
+          </div>
+        </section>
+
+        <!-- แบบ Masonry (มือถือ/จอแคบ ดูต่อเนื่องสวยกว่า) -->
+        <section class="p-4 md:hidden">
+          <div class="masonry">
+            <% posts.forEach(function(post) { %>
+              <% if (!post || !post.imageUrl) { return; } %>
+              <article class="masonry-item group rounded-xl overflow-hidden bg-white/5 ring-1 ring-white/10">
+                <img
+                  src="<%= post.imageUrl %>"
+                  alt="<%= post.caption || 'post image' %>"
+                  loading="lazy"
+                  decoding="async"
+                  class="w-full h-auto fade-in"
+                  onload="this.classList.add('loaded')"
+                  onerror="this.onerror=null; this.src='https://placehold.co/600x600?text=Image+Unavailable';"
+                  onclick="openLightbox('<%= post.imageUrl %>', `<%= (post.caption || '').replace(/`/g,'\\`') %>`)"
+                  style="cursor: zoom-in;"
+                />
+                <% if (post.caption) { %>
+                  <div class="p-3 text-sm text-gray-300"><%= post.caption %></div>
+                <% } %>
+              </article>
+            <% }) %>
+          </div>
+        </section>
+
+        <% } %>
+      </main>
+    </div>
+
+    <!-- Lightbox Modal -->
+    <div id="lightbox"
+         class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center z-50 p-4"
+         role="dialog" aria-modal="true" aria-label="ภาพขนาดใหญ่">
+      <button class="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20"
+              onclick="closeLightbox()" aria-label="ปิด">
+        <i data-feather="x" class="w-6 h-6"></i>
+      </button>
+      <figure class="max-w-5xl w-full">
+        <img id="lightboxImg" src="" alt="preview" class="w-full h-auto rounded-xl shadow-2xl" />
+        <figcaption id="lightboxCaption" class="text-center text-sm text-gray-300 mt-3"></figcaption>
+      </figure>
+    </div>
+
+    <script>
+      // feather icons
+      feather.replace();
+
+      // ปุ่ม refresh แค่ reload หน้า (signed URL ใหม่)
+      document.getElementById('refreshBtn')?.addEventListener('click', () => {
+        location.reload();
+      });
+
+      // IntersectionObserver สำหรับ lazy prefetch (optional enhancement)
+      const io = 'IntersectionObserver' in window ? new IntersectionObserver((entries) => {
+        entries.forEach(e => {
+          if (e.isIntersecting) {
+            const img = e.target;
+            // ถ้ามี data-src แบบ advance ก็สลับได้ ที่นี่ใช้ src ตรง ๆ อยู่แล้ว
+            io.unobserve(img);
+          }
+        });
+      }, { rootMargin: '200px' }) : null;
+
+      document.querySelectorAll('img[loading="lazy"]').forEach(img => io?.observe(img));
+
+      // Lightbox
+      function openLightbox(src, caption) {
+        const lb = document.getElementById('lightbox');
+        document.getElementById('lightboxImg').src = src;
+        document.getElementById('lightboxCaption').textContent = caption || '';
+        lb.classList.remove('hidden');
+        lb.classList.add('flex');
+      }
+      function closeLightbox() {
+        const lb = document.getElementById('lightbox');
+        document.getElementById('lightboxImg').src = '';
+        lb.classList.add('hidden');
+        lb.classList.remove('flex');
+      }
+      // ปิดด้วยคลิกพื้นหลัง
+      document.getElementById('lightbox')?.addEventListener('click', (e) => {
+        if (e.target.id === 'lightbox') closeLightbox();
+      });
+      // ปิดด้วย ESC
+      window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeLightbox();
+      });
+    </script>
+  </body>
+</html>

@@ -37,3 +37,34 @@ export const renderOwnGallery = async (req, res) => {
     res.status(500).send('Error loading gallery');
   }
 };
+
+export const renderFeedGallery = async (req, res) => {
+  // ตัวอย่าง: ดึงไฟล์ทั้งหมดจากทุก user (อาจจะต้องมีการจัดการ pagination หรือจำกัดจำนวน)
+  const prefix = `users/`;
+  try {
+    const listCommand = new ListObjectsV2Command({
+      Bucket: process.env.S3_BUCKET_NAME,
+      Prefix: prefix,
+    });
+    const data = await s3.send(listCommand);
+    const files = data.Contents || [];  
+    const posts = await Promise.all(
+      files.map(async (file, idx) => {
+        const getCmd = new GetObjectCommand({
+          Bucket: process.env.S3_BUCKET_NAME,
+          Key: file.Key,
+        });
+        const imageUrl = await getSignedUrl(s3, getCmd, { expiresIn: 60 * 5 });
+        return {
+          id: idx,
+          imageUrl,
+          caption: null,
+        };
+      })
+    );
+    res.render('feed', { posts });
+  } catch (err) {
+    console.error('Error loading feed:', err);
+    res.status(500).send('Error loading feed');
+  }
+};
