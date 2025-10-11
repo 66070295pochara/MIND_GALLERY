@@ -78,13 +78,24 @@ const galleryController = {
 
  getPublicGallery : async (req, res) => {
   try {
-    const images = await Image.find({ isPublic: true }).sort({ createdAt: -1 });// เลือกเฉพาะรูปที่สาธารณะ
+    const query = req.query.q || ''; // อ่านค่าจาก input name="q"
+    const condition = { isPublic: true };
+
+    if (query) {
+      condition.$or = [
+        { description: { $regex: query, $options: 'i' } },
+        { originalName: { $regex: query, $options: 'i' } },
+        { storedName:   { $regex: query, $options: 'i' } }
+      ];
+    }
+
+    const images = await Image.find(condition).sort({ createdAt: -1 });
     const withUrls = images.map(img => ({
       ...img.toObject(),
       url: `/uploads/${img.userId}/${encodeURIComponent(img.storedName)}`
     }));
-    res.render('public-gallery', { images: withUrls });
-   
+
+    res.render('public-gallery', { images: withUrls, query }); // ส่ง query กลับไปให้ input แสดงค่าเดิม
   } catch (err) {
     console.error(err);
     res.status(500).send('Error loading public gallery');
