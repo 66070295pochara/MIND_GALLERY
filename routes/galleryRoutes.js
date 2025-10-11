@@ -7,13 +7,14 @@ const router = express.Router();
 
 
 router.post('/upload',authMiddleware(),uploadStorage.upload.single('image'),galleryController.uploadImage);
-
-
 router.get('/mygallery', authMiddleware(), galleryController.getMyGallery);
 router.get('/public', authMiddleware(), galleryController.getPublicGallery);
-
-// router.get('/file/:id', authMiddleware(), galleryController.getImageFile);
-
 router.put('/toggle/:id', authMiddleware(), galleryController.togglePublic);
 
+router.put('/:imageId/description', authMiddleware(), galleryController.updateDescription);
+
+router.post('/togglelike/:imageId',authMiddleware(), galleryController.toggleLike);
+router.get('/userlike/:imageId', authMiddleware(), galleryController.getLikeUser);
+
+router.delete('/:imageId', authMiddleware(), galleryController.deleteImage);
 export default router;

@@ -10,6 +10,9 @@ const ImageSchema = new mongoose.Schema({
   path: String,
   isPublic: { type: Boolean, default: false },
   description: { type: String, default: '' },
+  likes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+  comments: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Comment' }],
+
 }, { timestamps: true });
 
 export default mongoose.model('Image', ImageSchema);

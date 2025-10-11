@@ -53,10 +53,6 @@ app.get('/register', (req, res) => res.render('register'));
 import multer from 'multer';
 import Image from './models/Image.js';
 app.use('/uploads', express.static('uploads'));
-app.get('/my-gallery', authMiddleware(), async (req, res) => {
-  const images = await Image.find({ userId: req.user.id }).sort({ createdAt: -1 });
-  res.render('my-gallery', { images });
-});
 
 
 

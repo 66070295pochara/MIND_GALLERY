@@ -1,6 +1,8 @@
 import path from 'path';
 import fs from 'fs';
 import Image from '../models/Image.js';
+import mongoose from "mongoose";
+
 
 const galleryController = {
   // อัปโหลดรูป บันทึกmetadata รูป
@@ -31,22 +33,32 @@ const galleryController = {
   // ฉบับปรับปรุง ให้เเสดง path เต็มของรูป mapรูป กับ path เต็ม
   
 
-  getMyGallery : async (req, res) => {
+  getMyGallery: async (req, res) => {
   try {
-    const images = await Image.find({ userId: req.user.id }).sort({ createdAt: -1 });//ดึงข้อมูลจากฐานข้อมูลเฉพาะรูปที่มี userId ตรงกับ ID ของผู้ใช้
-  //จัดเรียงจากรูปที่อัปโหลดล่าสุด
-    // สร้าง array ใหม่ที่มี url เต็มของรูป
+    const userId = req.user.id;
+
+    const images = await Image.find({ userId })
+      .sort({ createdAt: -1 })
+      .populate({
+        path: 'comments',
+        options: { sort: { createdAt: -1 } },     // คอมเมนต์ใหม่อยู่บน
+        populate: { path: 'userId', select: 'name' } // ชื่อผู้คอมเมนต์
+      })
+      .lean(); // ได้เป็น plain object แล้ว จะ map/แต่งเพิ่มสะดวก
+
     const imagesWithUrl = images.map(img => ({
-      ...img.toObject(),// แปลงเป็น object 
-      url: `/uploads/${req.user.id}/${img.storedName}` 
+      ...img,
+      url: `/uploads/${userId}/${img.storedName}`,
+      commentCount: (img.comments?.length) || 0
     }));
 
-    res.render('my-gallery', { images: imagesWithUrl });
+    return res.render('my-gallery', { images: imagesWithUrl });
   } catch (err) {
     console.error(err);
-    res.status(500).send('Error loading gallery');
+    return res.status(500).send('Error loading gallery');
   }
 },
+
 
   // // ดึงไฟล์ ตรวจสอบสิทว่าเป็นรูปตัวเองไหม
   // getImageFile: async (req, res) => {
@@ -72,6 +84,7 @@ const galleryController = {
       url: `/uploads/${img.userId}/${encodeURIComponent(img.storedName)}`
     }));
     res.render('public-gallery', { images: withUrls });
+   
   } catch (err) {
     console.error(err);
     res.status(500).send('Error loading public gallery');
@@ -79,12 +92,40 @@ const galleryController = {
 },
 
 
+
+  updateDescription :  async(req, res) =>{
+    try{
+         const { description } = req.body;
+         const { imageId } = req.params;
+         
+        const text = description.trim()
+        const image = await Image.findOneAndUpdate(
+        { _id: imageId, userId: req.user.id },
+        { description: text },
+        { new: true }
+      ).select("_id originalName description userId createdAt");
+        if (!image) {
+              return res.status(404).json({ message: "Image not found or unauthorized" });
+            }
+
+            res.status(200).json({
+              ok: true,
+              message: "Description updated successfully",
+              image,
+            });
+
+    }catch(err){
+      res.status(500).json({ message: 'Failed to toggle status' });
+    }
+  },
+
 // เปลี่ยนสถานะ public/private ของรูป
   togglePublic : async (req, res) => {
   try {
     const img = await Image.findById(req.params.id);// หาเอกสารรูปตาม id
     if (!img) return res.status(404).json({ message: 'Not found' });
-    if (String(img.userId) !== String(req.user.id)) return res.status(403).json({ message: 'Forbidden' });
+    if (String(img.userId) !== String(req.user.id)) 
+      return res.status(403).json({ message: 'Forbidden' });
 
     img.isPublic = !img.isPublic; // กลับค่าบูลีนปกติ
     await img.save();
@@ -94,22 +135,89 @@ const galleryController = {
   }
   },
 
+
+  
+
   // ลบไฟล์ ตรวจสอบสิทธิ์เจ้าของไฟล์ก่อน
   deleteImage: async (req, res) => {
-    try {
-      const img = await Image.findById(req.params.id);
-      if (!img) return res.status(404).send('Not found');
-      if (String(img.userId) !== String(req.user.id)) return res.status(403).send('Forbidden');
+   try {
+    const { imageId } = req.params;      
 
-      try {
-        fs.unlinkSync(img.path);
-      } catch {}
-      await img.deleteOne();
-      return res.json({ ok: true });
-    } catch (err) {
-      res.status(500).json({ message: 'Delete failed' });
+    if (!mongoose.Types.ObjectId.isValid(imageId)) {
+      return res.status(400).json({ message: "Invalid image id" });
+    }
+
+    const img = await Image.findById(imageId);
+    if (!img) return res.status(404).json({ message: "Image not found" });
+
+    if (String(img.userId) !== String(req.user.id)) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+
+    try {
+      if (img.path && fs.existsSync(img.path)) fs.unlinkSync(img.path);
+    } catch (e) {
+      console.warn("Skip file delete:", e.message);
+    }
+
+    await img.deleteOne();
+
+    return res.status(200).json({
+      ok: true,
+      message: "Image deleted successfully",
+      imageId,                           
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Delete failed", error: err.message });
+  }
+},
+
+
+
+  toggleLike : async (req, res) =>{
+    try{
+        const {imageId} = req.params
+        const userId = req.user.id;
+
+        const image = await Image.findById(imageId);
+        if (!image){
+          return res.status(404).send('Image not found');
+        }
+        const isLiked = image.likes.includes(userId);
+        if(isLiked){
+          image.likes.pull(userId);// เอาออก
+        }else{
+          image.likes.push(userId);
+        }
+        await image.save();
+        res.json({ok: true,liked: !isLiked, countLikes: image.likes.length,
+      });
+
+    }catch(err){
+      res.status(500).json({ message: 'Fail to toggleLike' });
     }
   },
+
+  getLikeUser : async (req, res) => {
+    try{
+        const {imageId} = req.params
+        const image = await Image.findById(imageId)
+        .populate("likes", "name email").sort({ createdAt: -1 });
+
+          if (!image) {
+          return res.status(404).send('Image not found');
+          }
+          return res.json({likedUsers: image.likes,countLikes: image.likes.length}) 
+    }catch(err){
+          res.status(500).json({ message: 'Fail to get like' });
+    }
+  }
+
+
+  
 };
+
+  
 
 export default galleryController;

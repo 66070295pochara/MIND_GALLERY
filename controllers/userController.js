@@ -1,26 +1,44 @@
 import bcrypt from "bcrypt"
 import jwt from "jsonwebtoken"
 import userService from "../services/userService.js"
+import mongoose from "mongoose";
+import User from "../models/User.js";
 
 const userController = {
-  getAllUsers: async (req, res) => {
+  getMe: async (req, res) => {
     try{
-      const users = await userService.getAllUsers()
-      res.status(200).json(users)
+        if (!req.user) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+       const userId = req.user.id  
+      const user = await User.findById(userId)
+      .select("_id name email createdAt")
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+        res.status(200).json(user)  
     } catch(err) {
       res.status(500).json(err)
     }
   },
-  getUserById: async (req, res) => {
-    try {
-      const id = req.params.id
-      const user = await userService.getUserById(id)
-      res.status(200).json(user)
-    } catch(err) {
+
+  updateAboutMe : async (req, res) => {
+    try{
+        const { aboutme } = req.body;
+        const text = aboutme.trim()
+        const user = await User.findByIdAndUpdate(
+        req.user.id,{ aboutMe: text },{ new: true }
+        ).select("_id name email aboutMe");
+        if (!user) return res.status(404).json({ message: "User not found" });
+        res.status(200).json(user) 
+    }catch(err){
       res.status(500).json(err)
     }
-    
   },
+
+
+
   register: async (req, res) => {
     try{
      
@@ -54,7 +72,7 @@ const userController = {
             maxAge: 24*60*60*1000,
             sameSite: "strict"
       })
-
+    console.log('POST /login BODY:', req.body);  
     return res.json({
       message: "success"
     })
@@ -73,6 +91,19 @@ const userController = {
   return res.json({
       message: "clear cookie success"
     })
+  },
+  
+  deleteMe : async (req, res) => {
+    try {
+      const user = await User.findByIdAndDelete(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.status(200).json("Account deleted successfully")
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Failed to delete account" });
+  }
   }
 }
 
