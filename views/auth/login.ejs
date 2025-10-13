@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>Login | Mind Gallery</title>
-  <link rel="stylesheet" href="/Auth/style.css">
+  <link rel="stylesheet" href="/Auth/login.css">
 </head>
 <body>
   <div class="wrapper">
@@ -61,7 +61,8 @@
         document.getElementById('errorMsg').textContent =
           data.message || 'Username or Password incorrect';
       } else {
-        window.location.href = '/home';
+           window.location.href = '/gallery/my';
+
       }
     });
   </script>

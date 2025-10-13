@@ -12,6 +12,7 @@ const ImageSchema = new mongoose.Schema({
   description: { type: String, default: '' },
   likes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   comments: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Comment' }],
+  
 
 }, { timestamps: true });
 

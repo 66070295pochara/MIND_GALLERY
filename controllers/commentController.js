@@ -22,7 +22,7 @@ const commentController ={
 
             image.comments.push(comment._id);
             await image.save();
-            res.json({ ok: true, comment });
+            res.status(200).json({ ok: true, comment });
 
         }catch(err){
             console.error(err);
@@ -35,7 +35,7 @@ const commentController ={
             const { imageId } = req.params;
             const comments = await Comment.find({ imageId })
             .populate("userId", "name").sort({ createdAt: -1 });
-            res.json({ ok: true, comments });
+            res.status(200).json({ ok: true, comments });
 
         }catch(err){
             console.error(err);
@@ -51,18 +51,18 @@ const commentController ={
             if (!checkText){
                 return res.status(400).json({message: "Comment can't be empty"})
             };
-
+            const comment = await Comment.findById(commentID);
             if (comment.userId.toString() !== req.user.id)
                 return res.status(403).json({ message: "forbidden" });
 
-             const comment = await Comment.findById(commentID);
+             
                 if (!comment) {
                 return res.status(404).json({ message: "Comment not found" });
             }
 
             comment.text = checkText;
             comment.save();
-            res.json({ ok: true, message: "Comment updated", comment });
+            res.status(200).json({ ok: true, message: "Comment updated", comment });
         }catch(err){
             console.error(err);
             res.status(500).json({ message: "Fail to update comment" });
@@ -84,7 +84,7 @@ const commentController ={
             await Comment.findByIdAndDelete(commentID);
             await Image.findByIdAndUpdate(comment.imageId, { $pull: { comments: commentID } });
 
-            res.json({ ok: true, message: "Delete sucessful" })
+            res.status(200).json({ ok: true, message: "Delete sucessful" })
             
         }catch(err){
             console.error(err);

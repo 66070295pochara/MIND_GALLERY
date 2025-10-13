@@ -2,13 +2,14 @@ import path from 'path';
 import fs from 'fs';
 import Image from '../models/Image.js';
 import mongoose from "mongoose";
-
+import User from '../models/User.js';
 
 const galleryController = {
   // อัปโหลดรูป บันทึกmetadata รูป
   uploadImage: async (req, res) => {
     try {
-      if (!req.file) return res.status(400).json({ message: 'No file' });
+      if (!req.file)
+         return res.status(400).json({ message: 'No file' });
 
       const isPublic = req.body.isPublic === 'true'; // Get the isPublic value from the request body
       const doc = await Image.create({
@@ -22,7 +23,7 @@ const galleryController = {
         description: req.body.description || '',
       });
 
-      return res.json({ ok: true, imageId: doc._id });
+      return res.status(200).json({ ok: true, imageId: doc._id });
     } catch (err) {
       console.error(err);
       res.status(500).json({ message: 'Upload failed' });
@@ -35,24 +36,19 @@ const galleryController = {
 
   getMyGallery: async (req, res) => {
   try {
-    const userId = req.user.id;
+      const userId = req.user.id;
+      const images = await Image.find({ userId })
+                                .sort({ createdAt: -1 })
+                                .lean();
 
-    const images = await Image.find({ userId })
-      .sort({ createdAt: -1 })
-      .populate({
-        path: 'comments',
-        options: { sort: { createdAt: -1 } },     // คอมเมนต์ใหม่อยู่บน
-        populate: { path: 'userId', select: 'name' } // ชื่อผู้คอมเมนต์
-      })
-      .lean(); // ได้เป็น plain object แล้ว จะ map/แต่งเพิ่มสะดวก
-
-    const imagesWithUrl = images.map(img => ({
-      ...img,
-      url: `/uploads/${userId}/${img.storedName}`,
-      commentCount: (img.comments?.length) || 0
+      const items = images.map(img => ({...img,
+      url: img.url ?? `/uploads/${img.userId}/${img.storedName}`, 
+      likes: img.likes ?? []
     }));
+    //array imges map loop เเล้วเเปลง img(pointer)  เป็น obj  ..img เอามาทั้งฟิล  img.url ถ้ามี URL อยู่แล้วใช้ของเดิมถ้าไม่จะสร้างใหม่ ถ้ามีเอา like มาด้วย
+   res.set('Cache-Control', 'no-store');
+   return res.status(200).json({ items });
 
-    return res.render('my-gallery', { images: imagesWithUrl });
   } catch (err) {
     console.error(err);
     return res.status(500).send('Error loading gallery');
@@ -78,13 +74,14 @@ const galleryController = {
 
  getPublicGallery : async (req, res) => {
   try {
-    const images = await Image.find({ isPublic: true }).sort({ createdAt: -1 });// เลือกเฉพาะรูปที่สาธารณะ
-    const withUrls = images.map(img => ({
+      const images = await Image.find({ isPublic: true }).sort({ createdAt: -1 });
+      const items = images.map(img => ({
       ...img.toObject(),
       url: `/uploads/${img.userId}/${encodeURIComponent(img.storedName)}`
     }));
-    res.render('public-gallery', { images: withUrls });
-   
+
+    
+   res.status(200).json({ items })
   } catch (err) {
     console.error(err);
     res.status(500).send('Error loading public gallery');
@@ -113,7 +110,7 @@ const galleryController = {
               message: "Description updated successfully",
               image,
             });
-
+              
     }catch(err){
       res.status(500).json({ message: 'Failed to toggle status' });
     }
@@ -129,7 +126,7 @@ const galleryController = {
 
     img.isPublic = !img.isPublic; // กลับค่าบูลีนปกติ
     await img.save();
-    res.json({ ok: true, newStatus: img.isPublic });
+    res.status(200).json({ ok: true, newStatus: img.isPublic });
   } catch (err) {
     res.status(500).json({ message: 'Failed to toggle status' });
   }
@@ -179,19 +176,28 @@ const galleryController = {
     try{
         const {imageId} = req.params
         const userId = req.user.id;
-
+        const user = await User.findById(userId);
+          if (!user){
+          return res.status(404).json({ message: "User not found" });
+        }
+        
+  
         const image = await Image.findById(imageId);
         if (!image){
           return res.status(404).send('Image not found');
         }
+
         const isLiked = image.likes.includes(userId);
         if(isLiked){
-          image.likes.pull(userId);// เอาออก
+          image.likes.pull(userId)// เอาออก
+          user.likedImages.pull(imageId)
         }else{
-          image.likes.push(userId);
+            image.likes.addToSet(userId);
+            user.likedImages.addToSet(imageId);
         }
-        await image.save();
-        res.json({ok: true,liked: !isLiked, countLikes: image.likes.length,
+         await image.save()
+         await user.save()
+        res.status(200).json({ok: true,liked: !isLiked, countLikes: image.likes.length,user: user.likedImages
       });
 
     }catch(err){
@@ -208,7 +214,7 @@ const galleryController = {
           if (!image) {
           return res.status(404).send('Image not found');
           }
-          return res.json({likedUsers: image.likes,countLikes: image.likes.length}) 
+          return res.status(200).json({likedUsers: image.likes,countLikes: image.likes.length}) 
     }catch(err){
           res.status(500).json({ message: 'Fail to get like' });
     }

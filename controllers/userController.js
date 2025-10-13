@@ -72,7 +72,7 @@ const userController = {
             maxAge: 24*60*60*1000,
             sameSite: "strict"
       })
-    console.log('POST /login BODY:', req.body);  
+    
     return res.json({
       message: "success"
     })
@@ -103,6 +103,43 @@ const userController = {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Failed to delete account" });
+  }
+  },
+
+
+  getMyLikedImages: async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id)
+      .populate({
+        path: "likedImages",
+        select: "_id userId originalName storedName description isPublic createdAt",
+        populate: { path: "userId", select: "_id name" }
+      })
+      .select("likedImages");
+
+    if (!user) {
+      return res.status(404).json({ ok: false, message: "User not found" });
+    }
+
+      const images = user.likedImages.map(img => {
+      const userId = img.userId?._id ? String(img.userId._id) : String(img.userId || "unknown");
+
+      return {
+        _id: img._id,
+        userId,
+        originalName: img.originalName,
+        storedName: img.storedName,
+        description: img.description || "",
+        isPublic: !!img.isPublic,
+        createdAt: img.createdAt,
+        url: `/uploads/${userId}/${img.storedName}`
+      };
+    });
+
+    res.status(200).json({ ok: true, count: images.length, images });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ ok: false, message: "Fail to get liked images" });
   }
   }
 }

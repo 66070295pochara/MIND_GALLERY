@@ -21,4 +21,6 @@ router.post('/logout', authMiddleware(), userController.logout);
 
 
 router.delete('/me', authMiddleware(), userController.deleteMe)
+
+router.get('/me/like', authMiddleware(), userController.getMyLikedImages)
 export default router;

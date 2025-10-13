@@ -28,7 +28,8 @@ const UserSchema = new mongoose.Schema({
     default: "user",
 
   },
-  aboutMe: { type: String, default: "", trim: true, maxlength: 200 } 
+  aboutMe: { type: String, default: "", trim: true, maxlength: 200 },
+  likedImages: [{ type: mongoose.Schema.Types.ObjectId, ref: "Image", default: [] }]
 }, {timestamps: true})
 
 const User = mongoose.model("User", UserSchema);

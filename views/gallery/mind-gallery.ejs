@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Own Gallery | Mind Gallery</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>
+
+  <!-- เพิ่มสไตล์เฉพาะ overlay โปรไฟล์ + ปุ่ม -->
+  <style>
+    .profile-header { text-align:center; position:relative; }
+    .user-name { font-weight:700; cursor:pointer; }
+    #aboutText { color:#ddd; opacity:.9; margin-top:6px }
+    .comment-item{
+      padding:6px 10px; margin-bottom:8px;
+      background:rgba(255,255,255,.06); border-radius:8px;
+    }
+    .comment-text{ white-space:pre-wrap; }
+
+    /* จัด overlay ให้อยู่กลางจอ */
+    .overlay.is-open {
+      display:flex !important;
+      align-items:center;
+      justify-content:center;
+    }
+    /* กล่องโปรไฟล์ */
+    .profile-modal {
+      width: min(720px, 92vw);
+      background:#111;
+      color:#eee;
+      border-radius:16px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.55);
+      overflow:hidden;
+    }
+    .profile-modal .modal-body{ padding:18px 20px 16px; }
+    .profile-modal h3 { margin:0 0 8px }
+    .profile-modal .description { opacity:.9; margin:.15rem 0; }
+    .profile-modal hr{ border-color:rgba(255,255,255,.12) }
+    .profile-modal textarea{
+      width:100%; border-radius:10px; padding:10px; resize:vertical;
+      background:#181818; color:#eee; border:1px solid #2a2a2a;
+    }
+    .modal-actions{
+      display:flex; gap:8px; margin-top:10px; align-items:center;
+    }
+    .btn { background:#444; color:#fff; border:0; padding:8px 12px; border-radius:8px; cursor:pointer; }
+    .btn:hover{ filter:brightness(1.08) }
+    .btn-danger{ background:#e03131; color:#fff; border:0; padding:8px 12px; border-radius:8px; cursor:pointer; }
+    .btn-ghost{ background:transparent; border:1px solid #555; color:#ddd; padding:8px 12px; border-radius:8px; }
+  </style>
+</head>
+<body>
+  <main>
+    <!-- Sidebar -->
+    <aside class="left-sidebar">
+      <img src="/img/logo.png" class="logo" alt="Mind Gallery" />
+      <nav>
+        <a href="/gallery/my" class="active">
+          <i class="fas fa-home"></i><span>Own Gallery</span>
+        </a>
+        <a href="/gallery/all">
+          <i class="fas fa-globe"></i><span>All Gallery</span>
+        </a>
+        <a href="/gallery/fav">
+          <i class="fas fa-heart"></i><span>Favorite</span>
+        </a>
+      </nav>
+      <a href="#" class="logout" id="logoutBtn">
+        <i class="fas fa-sign-out"></i><span>Logout</span>
+      </a>
+    </aside>
+
+    <!-- Main -->
+    <section class="main-feed">
+      <div class="gallery-container">
+        <!-- Header -->
+        <div class="profile-header">
+          <div class="profile-pic" id="profilePic"></div>
+          <!-- @me กดได้ -->
+          <p class="user-name" id="userName">@me</p>
+          <!-- แสดง about me ใต้ชื่อ (ข้อความอย่างเดียว) -->
+          <p id="aboutText">—</p>
+          <button class="add-pic-btn" id="addPicBtn">Add pic +</button>
+        </div>
+
+        <hr style="border-color:rgba(255,255,255,.15); margin:14px 0;">
+
+        <!-- Grid -->
+        <div class="gallery-grid" id="grid"></div>
+
+        <!-- Overlay (preview รูป + actions) -->
+        <div class="overlay" id="overlay" aria-hidden="true">
+          <div class="overlay-content">
+            <div class="overlay-left">
+              <img src="" alt="Preview" id="overlayImg">
+            </div>
+            <div class="overlay-right">
+              <div class="overlay-info">
+                <h3 id="overlayUser">@user</h3>
+                <p class="description" id="overlayDesc"></p>
+
+                <div style="margin:8px 0">
+                  <label><input type="checkbox" id="publicToggle"> Public</label>
+                </div>
+
+                <div style="display:flex; gap:8px; margin:8px 0">
+                  <input id="descInput" type="text" placeholder="Update description..."
+                         style="flex:1; padding:8px; border-radius:8px;">
+                  <button id="descSaveBtn">Save</button>
+                </div>
+
+                <div class="overlay-footer" style="display:flex; gap:12px; align-items:center">
+                  <p id="overlayLikes">Like : 0</p>
+                  <button id="deleteBtn" class="btn-danger">DELETE</button>
+                  <button id="closeBtn"  class="btn">Close</button>
+                </div>
+
+                <hr style="border-color:rgba(255,255,255,.1); margin:12px 0;">
+                <!-- Comments (view-only) -->
+                <div class="overlay-comments" id="overlayComments">
+                  <h4>Comments</h4>
+                  <div id="commentList"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Add picture modal -->
+        <div class="addpic-overlay" id="addpicOverlay" style="display:none;">
+          <div class="addpic-box">
+            <h3>Add Picture</h3>
+            <label>Choose Pic (.jpg/.png)</label>
+            <input type="file" id="addpicFile" accept="image/*" style="margin-top:5px;">
+            <label style="margin-top:15px;">Description</label>
+            <textarea id="addpicDesc" rows="3" placeholder="description..."
+                      style="width:100%; margin-top:5px; border-radius:8px; padding:8px;"></textarea>
+            <label style="margin-top:10px;"><input type="checkbox" id="addpicPublic"> Public</label>
+            <div class="addpic-actions">
+              <button id="addpicCancel">Cancel</button>
+              <button id="addpicSubmit">Add</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Profile Overlay (แก้ About me ภายใน overlay นี้ | กลางจอ + delete) -->
+        <div class="overlay" id="profileOverlay" aria-hidden="true" style="display:none;">
+          <div class="profile-modal">
+            <div class="modal-body">
+              <h3 id="profName">@me</h3>
+              <p id="profEmail" class="description"></p>
+              <p id="profCreated" class="description"></p>
+
+              <hr>
+
+              <h4>About me</h4>
+              <textarea id="aboutInput" rows="4"></textarea>
+
+              <div class="modal-actions">
+                <button id="aboutSaveBtn" class="btn">Save</button>
+                <button id="profCloseBtn" class="btn-ghost">Close</button>
+                <button id="deleteAccountBtn" class="btn-danger" style="margin-left:auto">Delete account</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- /Profile Overlay -->
+
+      </div>
+    </section>
+  </main>
+
+  <script>
+  // ===== helpers =====
+  const grid = document.getElementById('grid');
+  const overlay = document.getElementById('overlay');
+  const overlayImg = document.getElementById('overlayImg');
+  const overlayUser = document.getElementById('overlayUser');
+  const overlayDesc = document.getElementById('overlayDesc');
+  const overlayLikes = document.getElementById('overlayLikes');
+  const publicToggle = document.getElementById('publicToggle');
+  const descInput = document.getElementById('descInput');
+  const deleteBtn = document.getElementById('deleteBtn');
+  const closeBtn = document.getElementById('closeBtn');
+  const addpicOverlay = document.getElementById('addpicOverlay');
+  const addPicBtn = document.getElementById('addPicBtn');
+  const addpicCancel = document.getElementById('addpicCancel');
+  const addpicSubmit = document.getElementById('addpicSubmit');
+  const addpicFile = document.getElementById('addpicFile');
+  const addpicDesc = document.getElementById('addpicDesc');
+  const addpicPublic = document.getElementById('addpicPublic');
+  const logoutBtn = document.getElementById('logoutBtn');
+  const userName = document.getElementById('userName');
+  const commentList = document.getElementById('commentList');
+
+  // โปรไฟล์/เกี่ยวกับฉัน
+  const aboutText        = document.getElementById('aboutText');
+  const profileOverlay   = document.getElementById('profileOverlay');
+  const profName         = document.getElementById('profName');
+  const profEmail        = document.getElementById('profEmail');
+  const profCreated      = document.getElementById('profCreated');
+  const aboutInput       = document.getElementById('aboutInput');
+  const aboutSaveBtn     = document.getElementById('aboutSaveBtn');
+  const profCloseBtn     = document.getElementById('profCloseBtn');
+  const deleteAccountBtn = document.getElementById('deleteAccountBtn');
+
+  let CURRENT_IMAGE = null;
+
+  function imageUrl(img) {
+    const candidates = [
+      img.url, img.path, img.imageUrl, img.fullPath, img.secure_url,
+      (img.userId && img.storedName) ? `/uploads/${img.userId}/${img.storedName}` : null,
+      img.storedName ? `/uploads/${img.storedName}` : null
+    ].filter(Boolean);
+    const base = candidates[0] || '';
+    const stamp = (img.updatedAt || img.createdAt || Date.now());
+    return base ? `${base}${base.includes('?') ? '&' : '?'}t=${new Date(stamp).getTime()}` : '';
+  }
+  function likeCountOf(img) {
+    return Array.isArray(img.likes) ? img.likes.length : (img.countLikes || 0);
+  }
+  function escapeHtml(s){
+    return String(s ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;')
+      .replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;');
+  }
+  const fmtDate = (iso)=> { try{ return new Date(iso).toLocaleString(); }catch{return iso||'';} };
+
+  // ===== โหลดรูปของฉัน =====
+  async function loadMyGallery() {
+    grid.innerHTML = '<p>Loading...</p>';
+    const res = await fetch('/api/gallery/mygallery?_=' + Date.now(), { credentials: 'include' });
+    if (res.status === 401) { location.href = '/login'; return; }
+    if (!res.ok) { grid.innerHTML = '<p>Failed to load</p>'; return; }
+
+    const data  = await res.json();
+    const items = Array.isArray(data) ? data : (data.items || []);
+
+    grid.innerHTML = '';
+    if (!items.length) {
+      grid.innerHTML = '<p>No images yet. Click "Add pic +" to upload.</p>';
+      return;
+    }
+
+    items.forEach(img => {
+      const src = imageUrl(img);
+      const card = document.createElement('div');
+      card.className = 'gallery-item';
+      card.innerHTML = `<img src="${src}" alt="${escapeHtml(img.originalName||'image')}">`;
+      const tag = card.querySelector('img');
+      tag.onerror = () => { tag.alt = 'broken image'; tag.style.opacity = .4; };
+      tag.addEventListener('click', () => openOverlay(img));
+      grid.appendChild(card);
+    });
+
+    // ตั้งชื่อบนหัวจากรูปแรกถ้ามี
+    if (items[0]?.user?.name) userName.textContent = '@' + items[0].user.name;
+  }
+
+  // ===== โหลดข้อมูลผู้ใช้ (about + เตรียม overlay) =====
+  async function loadMe() {
+    try{
+      const res = await fetch('/api/users/me', { credentials: 'include' });
+      if (res.status === 401) { location.href = '/login'; return; }
+      if (!res.ok) return;
+      const me = await res.json(); // {_id,name,email,createdAt, aboutMe?}
+      userName.textContent  = '@' + (me.name || 'me');
+      aboutText.textContent = (me.aboutMe || '').trim() || '—';
+      profName.textContent   = '@' + (me.name || 'me');
+      profEmail.textContent  = 'Email: '  + (me.email || '-');
+      profCreated.textContent= 'Joined: ' + fmtDate(me.createdAt);
+      aboutInput.value       = me.aboutMe || '';
+    }catch(e){ console.error(e); }
+  }
+
+  // ===== Overlay รูป =====
+  async function openOverlay(img) {
+    CURRENT_IMAGE = img;
+    overlayImg.src = imageUrl(img);
+    overlayUser.textContent = img.user?.name ? '@' + img.user.name : '@me';
+    overlayDesc.textContent = img.description || '';
+    document.getElementById('descInput').value = img.description || '';
+    publicToggle.checked = !!img.isPublic;
+    overlayLikes.textContent = 'Like : ' + likeCountOf(img);
+    overlay.classList.add('is-open');
+    await loadComments(img._id);
+  }
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.classList.remove('is-open'); });
+  closeBtn.addEventListener('click', () => overlay.classList.remove('is-open'));
+
+  // คอมเมนต์ (view-only)
+  async function loadComments(imageId) {
+    if (!commentList) return;
+    commentList.innerHTML = '<p>Loading comments...</p>';
+    try {
+      const res = await fetch(`/api/comments/${imageId}`, { credentials: 'include' });
+      if (res.status === 401) { commentList.innerHTML = '<p>Please login to view comments.</p>'; return; }
+      if (!res.ok) { commentList.innerHTML = '<p>Fail to load comments.</p>'; return; }
+      const data = await res.json();
+      const comments = data.comments || [];
+      if (!comments.length) {
+        commentList.innerHTML = '<p>No comments yet.</p>';
+        return;
+      }
+      commentList.innerHTML = comments.map(c => `
+        <div class="comment-item">
+          <strong>@${escapeHtml(c.userId?.name || 'user')}</strong>:
+          <span class="comment-text"> ${escapeHtml(c.text)}</span>
+        </div>
+      `).join('');
+    } catch (e) {
+      console.error(e);
+      commentList.innerHTML = '<p>Fail to load comments.</p>';
+    }
+  }
+
+  // อัปเดตคำบรรยายรูป
+  document.getElementById('descSaveBtn').addEventListener('click', async () => {
+    if (!CURRENT_IMAGE) return;
+    const text = document.getElementById('descInput').value.trim();
+    const res = await fetch(`/api/gallery/${CURRENT_IMAGE._id}/description`, {
+      method:'PUT', headers:{ 'Content-Type':'application/json' },
+      credentials:'include', body: JSON.stringify({ description: text })
+    });
+    if (res.ok) { overlayDesc.textContent = text; CURRENT_IMAGE.description = text; }
+  });
+
+  // toggle public
+  publicToggle.addEventListener('change', async () => {
+    if (!CURRENT_IMAGE) return;
+    const res = await fetch(`/api/gallery/toggle/${CURRENT_IMAGE._id}`, {
+      method:'PUT', credentials:'include'
+    });
+    if (res.ok) CURRENT_IMAGE.isPublic = !CURRENT_IMAGE.isPublic;
+    else publicToggle.checked = !publicToggle.checked;
+  });
+
+  // ลบรูป
+  deleteBtn.addEventListener('click', async () => {
+    if (!CURRENT_IMAGE) return;
+    if (!confirm('Delete this image?')) return;
+    const res = await fetch(`/api/gallery/${CURRENT_IMAGE._id}`, {
+      method:'DELETE', credentials:'include'
+    });
+    if (res.ok) { overlay.classList.remove('is-open'); await loadMyGallery(); }
+  });
+
+  // Upload
+  addPicBtn.addEventListener('click', () => addpicOverlay.style.display = 'flex');
+  addpicCancel.addEventListener('click', () => addpicOverlay.style.display = 'none');
+  addpicOverlay.addEventListener('click', (e) => { if (e.target === addpicOverlay) addpicOverlay.style.display = 'none'; });
+  addpicSubmit.addEventListener('click', async () => {
+    const file = addpicFile.files[0];
+    if (!file) { alert('Choose a file'); return; }
+    const fd = new FormData();
+    fd.append('image', file);
+    fd.append('description', addpicDesc.value || '');
+    fd.append('isPublic', addpicPublic.checked ? 'true' : 'false');
+    const res = await fetch('/api/gallery/upload', { method:'POST', body:fd, credentials:'include' });
+    if (!res.ok) { alert('Upload failed'); return; }
+    addpicOverlay.style.display = 'none';
+    addpicFile.value = ''; addpicDesc.value = ''; addpicPublic.checked = false;
+    await loadMyGallery();
+  });
+
+  // ===== โปรไฟล์-overlay =====
+  function openProfileOverlay(){
+    profileOverlay.style.display = 'flex';
+    profileOverlay.classList.add('is-open');
+  }
+  function closeProfileOverlay(){
+    profileOverlay.classList.remove('is-open');
+    setTimeout(()=> profileOverlay.style.display = 'none', 120);
+  }
+  userName.addEventListener('click', openProfileOverlay);
+  profileOverlay.addEventListener('click', (e)=>{ if (e.target === profileOverlay) closeProfileOverlay(); });
+  profCloseBtn.addEventListener('click', closeProfileOverlay);
+
+  // บันทึก about me
+  aboutSaveBtn.addEventListener('click', async ()=>{
+    const aboutme = (aboutInput.value || '').trim();
+    try{
+      const res = await fetch('/api/users/aboutme', {
+        method:'PUT',
+        headers:{ 'Content-Type':'application/json' },
+        credentials:'include',
+        body: JSON.stringify({ aboutme })
+      });
+      if (!res.ok) { alert('Save failed'); return; }
+      const u = await res.json();
+      aboutText.textContent = (u.aboutMe || '').trim() || '—';
+      closeProfileOverlay();
+    }catch(e){ console.error(e); }
+  });
+
+  // ลบบัญชี
+  deleteAccountBtn.addEventListener('click', async ()=>{
+    if (!confirm('Delete your account permanently?')) return;
+    try{
+      const res = await fetch('/api/users/me', { method:'DELETE', credentials:'include' });
+      if (!res.ok) { alert('Delete failed'); return; }
+      alert('Account deleted');
+      location.href = '/login';
+    }catch(e){ console.error(e); }
+  });
+
+  // Logout
+  logoutBtn?.addEventListener('click', async (e) => {
+    e.preventDefault();
+    await fetch('/api/users/logout', { method:'POST', credentials:'include' }).catch(()=>{});
+    location.href = '/login';
+  });
+
+  // ===== Start =====
+  (async function start(){
+    await loadMe();       // ตั้งชื่อ + about ใต้ @me และเตรียมข้อมูลใน overlay
+    await loadMyGallery();
+  })();
+  </script>
+</body>
+</html>
