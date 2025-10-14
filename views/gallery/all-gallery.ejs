@@ -6,16 +6,14 @@
   <link rel="stylesheet" href="/css/style.css">
   <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>
-     <script>
-  window.CURRENT_USER_ID =
-    "<%= (typeof user !== 'undefined' && user && user._id) ? String(user._id) : '' %>";
-</script>
 
+  <!-- inject user id ให้ JS ใช้เทียบสิทธิ์เจ้าของคอมเมนต์ -->
+  <script>
+    window.CURRENT_USER_ID =
+      "<%= (typeof user !== 'undefined' && user && user._id) ? String(user._id) : '' %>";
+  </script>
 </head>
 <body>
-  <!-- inject user id ให้ JS ใช้เทียบสิทธิ์เจ้าของคอมเมนต์ -->
-  
-
   <main>
     <!-- sidebar -->
     <aside class="left-sidebar">
@@ -23,36 +21,28 @@
 
       <nav>
         <a href="/gallery/my">
-          <i class="fas fa-home"></i>
-          <span>Own Gallery</span>
+          <i class="fas fa-home"></i><span>Own Gallery</span>
         </a>
         <a href="/gallery/all" class="active">
-          <i class="fas fa-globe"></i>
-          <span>All Gallery</span>
+          <i class="fas fa-globe"></i><span>All Gallery</span>
         </a>
         <a href="/gallery/fav">
-          <i class="fas fa-heart"></i>
-          <span>Favorite</span>
+          <i class="fas fa-heart"></i><span>Favorite</span>
         </a>
       </nav>
 
-      <!-- Logout -->
       <a href="#" class="logout" id="logoutBtn">
-        <i class="fas fa-sign-out"></i>
-        <span>Logout</span>
+        <i class="fas fa-sign-out"></i><span>Logout</span>
       </a>
     </aside>
 
     <!-- main -->
     <section class="main-feed">
       <div class="gallery-container">
-
-        <!-- header -->
         <div class="profile-header">
           <div><img src="/img/logo.png" class="headlogo" alt="Mind Gallery"></div>
         </div>
 
-        <!-- grid -->
         <div class="gallery-grid" id="grid"></div>
 
         <!-- overlay preview -->
@@ -79,13 +69,13 @@
                   <button id="overlayClose" class="btn">Close</button>
                 </div>
 
-                <!-- Comments (ใต้ปุ่ม Close) -->
+                <!-- Comments -->
                 <div class="overlay-comments" id="overlayComments">
                   <h4>Comments</h4>
                   <div id="commentList"></div>
                   <form id="commentForm" style="margin-top:10px;">
                     <textarea id="commentInput" placeholder="Write a comment..." rows="2" required></textarea>
-                    <button id="postBTN" type="submit" class="btn">Post</button>
+                    <button id = "postBTN" type="submit" class="btn">Post</button>
                   </form>
                 </div>
                 <!-- /Comments -->
@@ -93,14 +83,12 @@
             </div>
           </div>
         </div>
-
+        <!-- /overlay -->
       </div>
     </section>
   </main>
 
   <script>
-     window.CURRENT_USER_ID =
-    "<%= (typeof user !== 'undefined' && user && user._id) ? String(user._id) : '' %>";
     /* ====== Logout ====== */
     document.getElementById('logoutBtn')?.addEventListener('click', async (e) => {
       e.preventDefault();
@@ -114,26 +102,33 @@
     /* ====== Helpers ====== */
     function cacheBust(urlLike, stamp) {
       if (!urlLike) return '';
-      const t = (stamp ? new Date(stamp).getTime() : Date.now());
+      const t = stamp ? new Date(stamp).getTime() : Date.now();
       return urlLike + (urlLike.includes('?') ? '&' : '?') + 't=' + t;
     }
+
     function imageUrl(img) {
+      // handle populated userId object or plain string
+      const userId = (img.userId && typeof img.userId === 'object') ? img.userId._id : img.userId;
+      const stored  = img.storedName ? encodeURIComponent(img.storedName) : '';
+
       const candidates = [
         img.url,
         img.path,
         img.imageUrl,
         img.fullPath,
         img.secure_url,
-        (img.userId && img.storedName) ? `/uploads/${img.userId}/${img.storedName}` : null,
-        img.storedName ? `/uploads/${img.storedName}` : null
+        (userId && stored) ? `/uploads/${userId}/${stored}` : null
       ].filter(Boolean);
-      const base = candidates[0] || '';
+
+      const base  = candidates[0] || '';
       const stamp = img.updatedAt || img.createdAt;
       return cacheBust(base, stamp);
     }
+
     function likeCountOf(img) {
       return Array.isArray(img.likes) ? img.likes.length : (img.countLikes || 0);
     }
+
     function escapeHtml(s) {
       return String(s ?? '')
         .replaceAll('&','&amp;')
@@ -164,7 +159,7 @@
       items.forEach(img => {
         const card = document.createElement('div');
         card.className = 'gallery-item';
-        card.innerHTML = `<img src="${imageUrl(img)}" alt="${img.originalName || 'image'}" data-id="${img._id}">`;
+        card.innerHTML = `<img src="${imageUrl(img)}" alt="${escapeHtml(img.originalName || 'image')}" data-id="${img._id}">`;
         const tag = card.querySelector('img');
         tag.onerror = () => { tag.alt = 'broken image'; tag.style.opacity = .4; };
         tag.addEventListener('click', () => openOverlay(img));
@@ -266,12 +261,12 @@
           return `
             <div class="comment-item" data-id="${c._id}">
               <div class="comment-body">
-                <strong>@${c.userId?.name || 'user'}</strong>:
+                <strong>@${escapeHtml(c.userId?.name || 'user')}</strong>:
                 <span class="comment-text">${escapeHtml(c.text)}</span>
               </div>
               ${isOwner ? `
               <div class="comment-actions">
-                <button id = "editcomment" class="btn btn-ghost btn-edit" data-action="edit"   data-id="${c._id}">Edit</button>
+                <button id = "editcomment" class="btn btn-ghost btn-edit"   data-action="edit"   data-id="${c._id}">Edit</button>
                 <button id = "deletecomment" class="btn btn-ghost btn-danger btn-delete" data-action="delete" data-id="${c._id}">Delete</button>
               </div>` : ``}
             </div>
@@ -297,7 +292,7 @@
         const textSpan = item?.querySelector('.comment-text');
         const current = textSpan ? textSpan.textContent : '';
         const nextText = prompt('Edit your comment:', current);
-        if (nextText == null) return; // cancel
+        if (nextText == null) return;
 
         const newText = nextText.trim();
         if (!newText) { alert("Comment can't be empty"); return; }
@@ -371,11 +366,17 @@
       }
     });
 
-    // เปิด overlay (เวอร์ชันเดียว ไม่ซ้ำ)
+    // เปิด overlay (อัปเดตให้แสดงชื่อจาก authorName ก่อน)
     async function openOverlay(img) {
       CURRENT_IMAGE = img;
       overlayImg.src = imageUrl(img);
-      overlayUser.textContent = img.user?.name ? '@' + img.user.name : '@user';
+
+      const displayName =
+        (img.authorName && img.authorName.trim()) ||
+        img.user?.name ||
+        'user';
+
+      overlayUser.textContent = '@' + displayName;
       overlayDesc.textContent = img.description || '';
       overlayLikes.textContent = `Like : ${likeCountOf(img)}`;
       overlay.classList.add('is-open');
@@ -388,10 +389,6 @@
     (async function start() {
       await loadGallery();
     })();
-  
-   
-
-
   </script>
 </body>
 </html>

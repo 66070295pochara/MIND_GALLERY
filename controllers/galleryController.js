@@ -13,7 +13,9 @@ const galleryController = {
 
       const isPublic = req.body.isPublic === 'true'; // Get the isPublic value from the request body
       const doc = await Image.create({
+      
         userId: req.user.id,
+        authorName: req.user.name,
         originalName: req.file.originalname,
         storedName: req.file.filename,
         mime: req.file.mimetype,

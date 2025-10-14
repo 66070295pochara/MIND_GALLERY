@@ -278,7 +278,14 @@
   async function openOverlay(img) {
     CURRENT_IMAGE = img;
     overlayImg.src = imageUrl(img);
-    overlayUser.textContent = img.user?.name ? '@' + img.user.name : '@me';
+
+    
+      const displayName =
+        (img.authorName && img.authorName.trim()) ||
+        img.user?.name ||
+        'user';
+
+     overlayUser.textContent = '@' + displayName;
     overlayDesc.textContent = img.description || '';
     document.getElementById('descInput').value = img.description || '';
     publicToggle.checked = !!img.isPublic;
@@ -288,6 +295,7 @@
   }
   overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.classList.remove('is-open'); });
   closeBtn.addEventListener('click', () => overlay.classList.remove('is-open'));
+  
 
   // คอมเมนต์ (view-only)
   async function loadComments(imageId) {
@@ -372,6 +380,7 @@
   function closeProfileOverlay(){
     profileOverlay.classList.remove('is-open');
     setTimeout(()=> profileOverlay.style.display = 'none', 120);
+    loadMe();
   }
   userName.addEventListener('click', openProfileOverlay);
   profileOverlay.addEventListener('click', (e)=>{ if (e.target === profileOverlay) closeProfileOverlay(); });

@@ -10,9 +10,9 @@ const userController = {
         if (!req.user) {
         return res.status(401).json({ message: "Unauthorized" });
       }
-       const userId = req.user.id  
+      const userId = req.user.id  
       const user = await User.findById(userId)
-      .select("_id name email createdAt")
+      .select("_id name email createdAt aboutMe")
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -28,9 +28,12 @@ const userController = {
         const { aboutme } = req.body;
         const text = aboutme.trim()
         const user = await User.findByIdAndUpdate(
-        req.user.id,{ aboutMe: text },{ new: true }
+        req.user.id,  { $set: { aboutMe: text } },{ aboutMe: text },{ new: true }
         ).select("_id name email aboutMe");
         if (!user) return res.status(404).json({ message: "User not found" });
+        
+
+      
         res.status(200).json(user) 
     }catch(err){
       res.status(500).json(err)
@@ -112,7 +115,7 @@ const userController = {
     const user = await User.findById(req.user.id)
       .populate({
         path: "likedImages",
-        select: "_id userId originalName storedName description isPublic createdAt",
+        select: "_id userId originalName authorName storedName description isPublic createdAt",
         populate: { path: "userId", select: "_id name" }
       })
       .select("likedImages");
@@ -127,6 +130,7 @@ const userController = {
       return {
         _id: img._id,
         userId,
+        authorName: img.authorName,
         originalName: img.originalName,
         storedName: img.storedName,
         description: img.description || "",

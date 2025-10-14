@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 
 const ImageSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', index: true, required: true },
+  authorName: { type: String },
   originalName: String,
   storedName: String,
   mime: String,

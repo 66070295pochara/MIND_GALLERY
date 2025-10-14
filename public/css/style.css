@@ -490,7 +490,7 @@ nav a:hover {
 background-color: #6b0c1a;
 }
 
-#descSaveBtn{
+#descSaveBtn ,#aboutSaveBtn{
 background-color: #00a334;       
   color: rgb(253, 253, 253);                  
   border: none;                  
@@ -620,3 +620,19 @@ background-color: #1691e3;
 }
 .comment-body{ color:#ddd; }
 .comment-text{ white-space:pre-wrap; }
+
+ #profCloseBtn{
+   background-color: #e84c4c;       
+  color: white;                  
+  border: none;                  
+  padding: 6px 14px;             
+  border-radius: 6px;            
+  cursor: pointer;               
+  transition: background-color 0.2s ease;
+  margin-top: 2px;
+  margin-left: 10px;
+  margin-right: auto;
+}
+#profCloseBtnt:hover {
+background-color: #f60101;
+}
