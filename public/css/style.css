@@ -636,3 +636,10 @@ background-color: #1691e3;
 #profCloseBtnt:hover {
 background-color: #f60101;
 }
+
+#searchInput{
+  padding: 10px 10px;
+  border-radius: 20px;
+  border: 1px solid #ccc;
+  width: 300px;
+}
