@@ -1,36 +1,35 @@
 {
-  "name": "mind_gallery",
+  "name": "mind-gallery",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/66070295pochara/MIND_GALLERY.git"
+    "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --runInBand",
+    "dev": "nodemon server.js"
+  },"jest": {
+    "testEnvironment": "node"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/66070295pochara/MIND_GALLERY/issues"
-  },
-  "homepage": "https://github.com/66070295pochara/MIND_GALLERY#readme",
   "description": "",
+  "type": "module",
   "dependencies": {
-    "@aws-sdk/client-cognito-identity-provider": "^3.899.0",
-    "@aws-sdk/client-s3": "^3.899.0",
-    "@aws-sdk/s3-request-presigner": "^3.899.0",
-    "aws-jwt-verify": "^5.1.0",
-    "axios": "^1.12.2",
+    "bcrypt": "^6.0.0",
+    "connect-flash": "^0.1.1",
     "cookie-parser": "^1.4.7",
-    "crypto": "^1.0.1",
+    "cors": "^2.8.5",
     "dotenv": "^17.2.2",
     "ejs": "^3.1.10",
     "express": "^5.1.0",
+    "express-session": "^1.18.2",
     "jsonwebtoken": "^9.0.2",
-    "nodemon": "^3.1.10",
-    "pg": "^8.16.3",
-    "querystring": "^0.2.1"
+    "mongoose": "^8.18.3",
+    "morgan": "^1.10.1",
+    "multer": "^2.0.2",
+    "nodemon": "^3.1.10"
+  },
+  "devDependencies": {
+    "cross-env": "^10.1.0",
+    "jest": "^30.2.0"
   }
 }
