@@ -1,19 +1,40 @@
-# MIND_GALLERY
-config = ไม่ต้องแตะต้องถ้าไม่ได้จะใช้ aws service อื่นๆ ถ้าจะเพิ่ม npm install เอา
-controllers = logic ของ route ต่างๆ
-    - upload.controller.js = logic ของการอัพโหลดไฟล์
-    - auth.controller.js = logic ของการ authenticate
-    - gallery.controller.js = logic ของการแสดง gallery
-middlewares = 
-    - authenticate.js = จะใช้{ authenticateCognitoJWT, requireAuth, requireRole } เลือกใส่ไว้ใน route ที่ต้องการ requireAuth = ต้อง login ก่อนถึงจะเข้าถึงได้
-    ###  requireAuth ควรไว้หน้า controller function เสมอ เพราะถ้าไม่ผ่านจะได้ไม่ต้องไป execute logic ใน controller ex: ('/presign', requireAuth, uploadController.getPresignedPutUrl);
-routes = 
-    - upload.routes.js = route ที่เกี่ยวกับการอัพโหลดไฟล์
-    - auth.routes.js = route ที่เกี่ยวกับการ authenticate
-    - gallery.routes.js = route ที่เกี่ยวกับการแสดง gallery[ owngallery, publicgallery(feed) ]
-    # ListObjectsV2Command = ดึง list object ใน s3
-utils = 
-    - secretHash.js = ฟังก์ชันช่วยในการ generate secret hash สำหรับ authenticate cognito
-server.js = จุดเริ่มต้นของโปรเจค
+# Mind Gallery
 
+เว็บแกลเลอรีสำหรับอัปโหลด/ดูรูป กดไลก์ และคอมเมนต์
+รันด้วย Node.js + Express + EJS, เก็บข้อมูลใน MongoDB
+
+## ✨ Features
+- Auth (JWT) — `JWT_SECRET`
+- Public/Private gallery
+- ค้นหา (`?q=`) จาก `description`, `originalName`, `storedName`
+- Like / Comment (แก้ไข/ลบเฉพาะเจ้าของ)
+- SSR ด้วย EJS + Static assets
+
+## 🧰 Tech Stack
+- **Server:** Node.js, Express, EJS
+- **DB:** MongoDB (Mongoose)
+- **Test:** `npm test` Jest
+
+## 🚀 เริ่มต้นใช้งาน
+
+### 1) ติดตั้ง
+```bash
+npm install
+
+### 2) ตั้งค่า environment variables
+- คัดลอกไฟล์ `.env.example` เป็น `.env`
+- แก้ไขค่าใน `.env` (เช่น `DB_URL`, `JWT_SECRET`)
+- ตัวอย่าง `.env`:
+  ```
+  DB_URL=mongodb://localhost:27017/mind_gallery
+  JWT_SECRET=change_me
+  ```
+
+### 3) รันเซิร์ฟเวอร์
+```bash
+node server.js
+
+### 4) ทดสอบ
+```bash
+npm test
 
