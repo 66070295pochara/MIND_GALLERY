@@ -62,7 +62,9 @@ npm test
 ```
 ## 📡 API Testing (Postman)
 
-โปรเจคนี้ได้จัดเตรียม API Documentation และ Collection ไว้สำหรับการทดสอบเรียบร้อยแล้ว โดยครอบคลุมระบบการทำงานหลักทั้งหมด (User, Gallery, Comment และ Like) 
+โปรเจคนี้ได้จัดเตรียม API Documentation และ Collection ไว้สำหรับการทดสอบเรียบร้อยแล้ว โดยครอบคลุมระบบการทำงานหลักทั้งหมด (User, Gallery, Comment และ Like) s
+
+![Postman](./preview_image/postman.png)
 
 ### Postman Documentation 
 
