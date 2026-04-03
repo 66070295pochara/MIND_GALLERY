@@ -1,40 +1,27 @@
-# Mind Gallery
+#  Mind Gallery
 
-เว็บแกลเลอรีสำหรับอัปโหลด/ดูรูป กดไลก์ และคอมเมนต์
-รันด้วย Node.js + Express + EJS, เก็บข้อมูลใน MongoDB
+Mind Gallery คือเว็ปแพลตฟอร์มสร้างขึ้นเพื่อแก้ปัญหาการจัดเก็บและเผยแพร่ผลงาน
+รูปภาพ โปรเจคนี้ช่วยให้ผู้ใช้สามารถอัปโหลดรูปภาพพร้อมกำหนดความเป็นส่วนตัว และสามารถชื่นชมผลงานต่างๆที่ผู้ใช้อื่นได้อัปโหลด และสามารถกดชื่นชอบรวมไปถึงแสดงความคิดเห็นต่อผลงานของกันและกันได้อย่างง่ายดาย เป็นการเปลี่ยนการจัดเก็บไฟล์แบบเดิมๆ ให้เป็นโอกาสในการแบ่งปันและสร้างสรรค์ผลงานต่างๆ
+
+รันการทำงานฝั่งเซิร์ฟเวอร์ด้วย Node.js + Express + EJS และเก็บข้อมูลใน MongoDB
+
+![Mind Gallery Preview](./images/preview.png)
+
 
 ## ✨ Features
-- Auth (JWT) — `JWT_SECRET`
-- Public/Private gallery
-- ค้นหา (`?q=`) จาก `description`, `originalName`, `storedName`
-- Like / Comment (แก้ไข/ลบเฉพาะเจ้าของ)
-- SSR ด้วย EJS + Static assets
+- **Authentication:** ระบบ Login/Register รักษาความปลอดภัยด้วย JWT (`JWT_SECRET`)
+- **Gallery Visibility:** ผู้ใช้สามารถตั้งค่ารูปภาพเป็น Public (สาธารณะ) หรือ Private (ส่วนตัว) ได้
+- **Search System:** ค้นหารูปภาพ (`?q=`) จาก `description`, `originalName` และ `storedName`
+- **Interactions:** ระบบ Like และ Comment (อนุญาตให้แก้ไข/ลบได้เฉพาะเจ้าของคอมเมนต์หรือรูปภาพเท่านั้น)
+- **SSR (Server-Side Rendering):** แสดงผลหน้าเว็บด้วย EJS ร่วมกับการจัดการ Static assets
 
 ## 🧰 Tech Stack
-- **Server:** Node.js, Express, EJS
-- **DB:** MongoDB (Mongoose)
-- **Test:** `npm test` Jest
+- **Server:** Node.js, Express.js, EJS
+- **Database:** MongoDB (Mongoose)
+- **Testing:** Jest
 
-## 🚀 เริ่มต้นใช้งาน
+## 🚀 เริ่มต้นใช้งาน (Getting Started)
 
-### 1) ติดตั้ง
+### 1. ติดตั้ง Dependencies
 ```bash
 npm install
-
-### 2) ตั้งค่า environment variables
-- คัดลอกไฟล์ `.env.example` เป็น `.env`
-- แก้ไขค่าใน `.env` (เช่น `DB_URL`, `JWT_SECRET`)
-- ตัวอย่าง `.env`:
-  ```
-  DB_URL=mongodb://localhost:27017/mind_gallery
-  JWT_SECRET=change_me
-  ```
-
-### 3) รันเซิร์ฟเวอร์
-```bash
-node server.js
-
-### 4) ทดสอบ
-```bash
-npm test
-
