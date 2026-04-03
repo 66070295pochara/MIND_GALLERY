@@ -5,15 +5,14 @@ Mind Gallery คือเว็ปแพลตฟอร์มสร้างข�
 
 รันการทำงานฝั่งเซิร์ฟเวอร์ด้วย Node.js + Express + EJS และเก็บข้อมูลใน MongoDB
 
-![Mind Gallery Preview](./images/preview.png)
+# Mind Gallery Preview
 
 
 ## ✨ Features
 - **Authentication:** ระบบ Login/Register รักษาความปลอดภัยด้วย JWT (`JWT_SECRET`)
 - **Gallery Visibility:** ผู้ใช้สามารถตั้งค่ารูปภาพเป็น Public (สาธารณะ) หรือ Private (ส่วนตัว) ได้
-- **Search System:** ค้นหารูปภาพ (`?q=`) จาก `description`, `originalName` และ `storedName`
 - **Interactions:** ระบบ Like และ Comment (อนุญาตให้แก้ไข/ลบได้เฉพาะเจ้าของคอมเมนต์หรือรูปภาพเท่านั้น)
-- **SSR (Server-Side Rendering):** แสดงผลหน้าเว็บด้วย EJS ร่วมกับการจัดการ Static assets
+- **SSR (Server-Side Rendering):** แสดงผลหน้าเว็บด้วย EJS 
 
 ## 🧰 Tech Stack
 - **Server:** Node.js, Express.js, EJS
